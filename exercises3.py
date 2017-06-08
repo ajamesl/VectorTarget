@@ -34,8 +34,8 @@ print " "
 class GuessingGame:
     def __init__(self):
         self.number = random.randint(1,101)
-        win = False
-        self.getGuess()
+        self.win = False
+        self.run()
 
     def num(self):
         print self.number
@@ -45,18 +45,25 @@ class GuessingGame:
         if self.guess < 1 or self.guess > 100:
             print "Invalid entry."
             self.getGuess()
-        else:
-            self.checkGuess()
 
     def checkGuess(self):
             if self.guess < self.number:
                 print "Too low."
-                self.getGuess()
+
             elif self.guess > self.number:
                 print "Too high."
-                self.getGuess()
+
             else:
                 print "Well done. You guessed correctly."
-                win = True
+                self.win = True
+
+    def run(self):
+            print "You have 6 guesses only."
+            j = 0
+            while j < 6:
+                if self.win == False:
+                    self.getGuess()
+                    self.checkGuess()
+                j += 1
 
 l = GuessingGame()
