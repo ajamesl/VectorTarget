@@ -11,6 +11,7 @@ x = []
 y = []
 z = []
 
+#Reading two sets of x, y, z coordinates from a txt file
 with open('data.txt', 'r') as csvfile:
     coords = csv.reader(csvfile, delimiter=',')
     for row in coords:
@@ -18,6 +19,7 @@ with open('data.txt', 'r') as csvfile:
         y.append(int(row[1]))
         z.append(int(row[2]))
 
+#Class defining x, y, z vectors and the vector arrow-head appearance/size
 class Arrow3D(FancyArrowPatch):
     def __init__(self, xs, ys, zs, *args, **kwargs):
         FancyArrowPatch.__init__(self, (0, 0), (0, 0), *args, **kwargs)
@@ -29,10 +31,11 @@ class Arrow3D(FancyArrowPatch):
         self.set_positions((xs[0], ys[0]), (xs[1], ys[1]))
         FancyArrowPatch.draw(self, renderer)
 
-
+#Define figure as 3D
 fig = plt.figure()
 ax = fig.add_subplot(111, projection='3d')
 
+#Axis range & labels
 ax.set_xlim([0, 10])
 ax.set_ylim([0, 10])
 ax.set_zlim([0, 10])
@@ -42,7 +45,7 @@ ax.set_zlabel('z axis')
 
 a = Arrow3D(x, y, z, mutation_scale=20, lw=1, arrowstyle="->",
             color="b")
-
+#Draw line
 ax.add_artist(a)
 
 plt.show()
