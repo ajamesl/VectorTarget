@@ -66,6 +66,39 @@ class Arrow3D(FancyArrowPatch):
         self.set_positions((xs[0], ys[0]), (xs[1], ys[1]))
         FancyArrowPatch.draw(self, renderer)
 
+def timer():
+    t = 0.0
+    while True:
+        time.sleep(1)
+        t += 1.0
+        return t
+
+class Trajectory():
+    def __init__(self, ax, ay, az):
+        self.xaccel = ax
+        self.yaccel = ay
+        self.zaccel = az
+
+    def xaccel(self):
+        return self.xaccel
+
+    def yaccel(self):
+        return self.yaccel
+
+    def zaccel(self):
+        return self.zaccel
+
+    def xvelo(self, vx0):
+        self.xvel = vx0 + self.xaccel()*time()
+
+    def yvelo(self, vy0):
+        self.yvel = vy0 + self.yaccel()*time()
+
+    def zvelo(self, vz0):
+        self.zvel = vz0 + self.zaccel()*time()
+
+traj = Trajectory(math.cos(0), math.cos(0), 0)
+
 #Defines figure as 3D
 fig = plt.figure()
 ax = fig.add_subplot(111, projection='3d')
@@ -90,9 +123,9 @@ ax.add_artist(a)
 
 for i in range(10):
 
-    xd = xd +
-    yd = yd +
-    zd = zd +
+    xd = xd + 0.5*timer()**2 + timer()
+    yd = yd + 0.5*timer()**2 + timer()
+    zd = zd + 0.5*timer()**2 + timer()
 
     x = [xo, xd]
     y = [yo, yd]
