@@ -69,11 +69,12 @@ class Arrow3D(FancyArrowPatch):
 #Defines figure as 3D
 fig = plt.figure()
 ax = fig.add_subplot(111, projection='3d')
+plt.ion()
 
 #Axis range & labels
-ax.set_xlim([0, 10000])
-ax.set_ylim([0, 10000])
-ax.set_zlim([0, 10000])
+ax.set_xlim([-10000, 10000])
+ax.set_ylim([-10000, 10000])
+ax.set_zlim([-10000, 10000])
 ax.set_xlabel('x')
 ax.set_ylabel('y')
 ax.set_zlabel('z')
@@ -87,4 +88,20 @@ a = Arrow3D(x, y, z, mutation_scale=20, lw=1, arrowstyle="->",
 #Draw line on plot
 ax.add_artist(a)
 
-plt.show()
+for i in range(10):
+
+    xd = xd +
+    yd = yd +
+    zd = zd +
+
+    x = [xo, xd]
+    y = [yo, yd]
+    z = [zo, zd]
+
+    a = Arrow3D(x, y, z, mutation_scale=20, lw=1, arrowstyle="->",
+                color="b")
+    ax.add_artist(a)
+    plt.pause(0.05)
+
+while True:
+    plt.pause(0.05)
