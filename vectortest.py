@@ -66,6 +66,7 @@ class Arrow3D(FancyArrowPatch):
         self.set_positions((xs[0], ys[0]), (xs[1], ys[1]))
         FancyArrowPatch.draw(self, renderer)
 
+
 def timer():
     return time.time() - to
 
@@ -96,12 +97,12 @@ class Trajectory():
 
 
 
-traj = Trajectory(math.cos(timer()), math.sin(timer()), 0)
+traj = Trajectory(math.cos(timer()), math.cos(timer()), 0.0)
 Ax = traj.get_xaccel()
 Ay = traj.get_yaccel()
 Az = traj.get_zaccel()
-Vx = traj.get_xvel(100.0)
-Vy = traj.get_yvel(100.0)
+Vx = traj.get_xvel(50.0)
+Vy = traj.get_yvel(50.0)
 Vz = traj.get_zvel(0.0)
 
 
@@ -123,13 +124,14 @@ y = [yo, yd]
 z = [zo, zd]
 
 a = Arrow3D(x, y, z, mutation_scale=20, lw=1, arrowstyle="->",
-            color="b")
+            color="k")
 # Draw line on plot
 ax.add_artist(a)
 
 # Loop updating vector from station to target
-for i in range(20):
+while True:
 
+    a.remove()
     xd = xd + 0.5*Ax*timer()**2 + Vx*timer()
     yd = yd + 0.5*Ay*timer()**2 + Vy*timer()
     zd = zd + 0.5*Az*timer()**2 + Vz*timer()
@@ -139,11 +141,11 @@ for i in range(20):
     z = [zo, zd]
 
     a = Arrow3D(x, y, z, mutation_scale=20, lw=1, arrowstyle="->",
-                color="b")
+                color="k")
     ax.add_artist(a)
 
     plt.pause(0.05)
-    time.sleep(0.2)
+
 
 # Keeps figure open
 while True:
