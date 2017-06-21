@@ -3,7 +3,6 @@ from mpl_toolkits.mplot3d import Axes3D
 from matplotlib.patches import FancyArrowPatch
 from mpl_toolkits.mplot3d import proj3d
 import numpy as np
-import random
 import time
 import csv
 import datetime
@@ -38,7 +37,6 @@ xd = GS0[0]
 yd = GS0[1]
 zd = GS0[2]
 
-
 # MOVING STATION GPS TO CARTESIAN
 
 # Radius of Earth
@@ -67,10 +65,12 @@ class Arrow3D(FancyArrowPatch):
         FancyArrowPatch.draw(self, renderer)
 
 
+# Function defining time elapsed
 def timer():
     return time.time() - to
 
 
+# Class to find trajectory by inputting acceleration
 class Trajectory():
     def __init__(self, ax, ay, az):
         self.__xaccel = ax
@@ -96,17 +96,16 @@ class Trajectory():
         return self.__zaccel*timer() + vz0
 
 
-
-traj = Trajectory(math.cos(timer()), math.cos(timer()), 0.0)
+# Defining the trajectory of the target
+traj = Trajectory(-5.0, 5.0, 0.0)
 Ax = traj.get_xaccel()
 Ay = traj.get_yaccel()
 Az = traj.get_zaccel()
-Vx = traj.get_xvel(50.0)
-Vy = traj.get_yvel(50.0)
+Vx = traj.get_xvel(0.0)
+Vy = traj.get_yvel(0.0)
 Vz = traj.get_zvel(0.0)
 
-
-# Defines figure as 3D
+# Defines figure as 3D and interactive
 fig = plt.figure()
 ax = fig.add_subplot(111, projection='3d')
 plt.ion()
@@ -119,22 +118,28 @@ ax.set_xlabel('x')
 ax.set_ylabel('y')
 ax.set_zlabel('z')
 
+# Definition of the vector from the station to the target
 x = [xo, xd]
 y = [yo, yd]
 z = [zo, zd]
 
+# Define and draw vector on figure
 a = Arrow3D(x, y, z, mutation_scale=20, lw=1, arrowstyle="->",
             color="k")
-# Draw line on plot
 ax.add_artist(a)
+
+t = 0
 
 # Loop updating vector from station to target
 while True:
 
     a.remove()
-    xd = xd + 0.5*Ax*timer()**2 + Vx*timer()
-    yd = yd + 0.5*Ay*timer()**2 + Vy*timer()
-    zd = zd + 0.5*Az*timer()**2 + Vz*timer()
+    #xd = xd + 0.5*Ax*timer()**2 + Vx*timer()
+    #yd = yd + 0.5*Ay*timer()**2 + Vy*timer()
+    #zd = zd + 0.5*Az*timer()**2 + Vz*timer()
+    xd = xd + 1000*math.cos(t)
+    yd = yd + 1000*math.sin(t)
+    zd = zd
 
     x = [xo, xd]
     y = [yo, yd]
@@ -145,7 +150,7 @@ while True:
     ax.add_artist(a)
 
     plt.pause(0.05)
-
+    t += (math.pi*1.0)/32.0
 
 # Keeps figure open
 while True:
