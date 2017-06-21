@@ -1,9 +1,7 @@
 import matplotlib.pyplot as plt
-import skyfield
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib.patches import FancyArrowPatch
 from mpl_toolkits.mplot3d import proj3d
-from skyfield.api import Topos
 import numpy as np
 import random
 import time
@@ -12,10 +10,12 @@ import datetime
 import math
 from Basis import *
 
+to = time.time()
+
 Long = []
 Lat = []
 
-#Reading longitude and latitude from file
+# Reading longitude and latitude from file
 with open('radar.txt', 'r') as csvfile:
     coords = csv.reader(csvfile, delimiter=',')
     for row in coords:
@@ -54,7 +54,7 @@ zd = GS0[2]
 #zo = GSO[2]
 
 
-#Class defining x, y, z vectors and the vector arrow-head appearance/size
+# Class defining x, y, z vectors and the vector arrow-head appearance/size
 class Arrow3D(FancyArrowPatch):
     def __init__(self, xs, ys, zs, *args, **kwargs):
         FancyArrowPatch.__init__(self, (0, 0), (0, 0), *args, **kwargs)
@@ -67,44 +67,50 @@ class Arrow3D(FancyArrowPatch):
         FancyArrowPatch.draw(self, renderer)
 
 def timer():
-    t = 0.0
-    while True:
-        time.sleep(1)
-        t += 1.0
-        return t
+    return time.time() - to
+
 
 class Trajectory():
     def __init__(self, ax, ay, az):
-        self.xaccel = ax
-        self.yaccel = ay
-        self.zaccel = az
+        self.__xaccel = ax
+        self.__yaccel = ay
+        self.__zaccel = az
 
-    def xaccel(self):
-        return self.xaccel
+    def get_xaccel(self):
+        return self.__xaccel
 
-    def yaccel(self):
-        return self.yaccel
+    def get_yaccel(self):
+        return self.__yaccel
 
-    def zaccel(self):
-        return self.zaccel
+    def get_zaccel(self):
+        return self.__zaccel
 
-    def xvelo(self, vx0):
-        self.xvel = vx0 + self.xaccel()*time()
+    def get_xvel(self, vx0 = 0.0):
+        return self.__xaccel*timer() + vx0
 
-    def yvelo(self, vy0):
-        self.yvel = vy0 + self.yaccel()*time()
+    def get_yvel(self, vy0 = 0.0):
+        return self.__yaccel*timer() + vy0
 
-    def zvelo(self, vz0):
-        self.zvel = vz0 + self.zaccel()*time()
+    def get_zvel(self, vz0 = 0.0):
+        return self.__zaccel*timer() + vz0
 
-traj = Trajectory(math.cos(0), math.cos(0), 0)
 
-#Defines figure as 3D
+
+traj = Trajectory(math.cos(timer()), math.sin(timer()), 0)
+Ax = traj.get_xaccel()
+Ay = traj.get_yaccel()
+Az = traj.get_zaccel()
+Vx = traj.get_xvel(100.0)
+Vy = traj.get_yvel(100.0)
+Vz = traj.get_zvel(0.0)
+
+
+# Defines figure as 3D
 fig = plt.figure()
 ax = fig.add_subplot(111, projection='3d')
 plt.ion()
 
-#Axis range & labels
+# Axes ranges & labels
 ax.set_xlim([-10000, 10000])
 ax.set_ylim([-10000, 10000])
 ax.set_zlim([-10000, 10000])
@@ -118,14 +124,15 @@ z = [zo, zd]
 
 a = Arrow3D(x, y, z, mutation_scale=20, lw=1, arrowstyle="->",
             color="b")
-#Draw line on plot
+# Draw line on plot
 ax.add_artist(a)
 
-for i in range(10):
+# Loop updating vector from station to target
+for i in range(20):
 
-    xd = xd + 0.5*timer()**2 + timer()
-    yd = yd + 0.5*timer()**2 + timer()
-    zd = zd + 0.5*timer()**2 + timer()
+    xd = xd + 0.5*Ax*timer()**2 + Vx*timer()
+    yd = yd + 0.5*Ay*timer()**2 + Vy*timer()
+    zd = zd + 0.5*Az*timer()**2 + Vz*timer()
 
     x = [xo, xd]
     y = [yo, yd]
@@ -134,7 +141,10 @@ for i in range(10):
     a = Arrow3D(x, y, z, mutation_scale=20, lw=1, arrowstyle="->",
                 color="b")
     ax.add_artist(a)
-    plt.pause(0.05)
 
+    plt.pause(0.05)
+    time.sleep(0.2)
+
+# Keeps figure open
 while True:
     plt.pause(0.05)
