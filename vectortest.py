@@ -38,8 +38,8 @@ zd = GS0[2]
 
 # Read longitude and latitude from GPS #
 ########################################
-Ground_Long = [80]
-Ground_Lat = [-30]
+Ground_Long = [0]
+Ground_Lat = [-40]
 ########################################
 
 now = datetime.datetime.utcnow()
