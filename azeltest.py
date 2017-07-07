@@ -9,15 +9,16 @@ import math
 from Basis import *
 
 
-Long = []
+# Reading longitude and latitude from file and storing in lists
 Lat = []
+Long = []
 
-# Reading longitude and latitude from file
 with open('radar.txt', 'r') as csvfile:
     coords = csv.reader(csvfile, delimiter=',')
     for row in coords:
-        Long.append(float(row[0]))
-        Lat.append(float(row[1]))
+        Lat.append(float(row[0]))
+        Long.append(float(row[1]))
+
 
 # Radius of Earth
 Re = 6378.135
@@ -26,9 +27,15 @@ Re = 6378.135
 
 # Read longitude and latitude from GPS #
 ########################################
-Ground_Long = [-40]
-Ground_Lat = [20]
+Ground_Lat = [80]
+Ground_Long = [0]
 ########################################
+
+
+# Read Elevation of Ground Station from Google API
+##################################################
+Ground_Elev = ''
+##################################################
 
 now = datetime.datetime.utcnow()
 STt0 = SidTime(JulianDay(now.year, now.month, now.day), Ground_Long[0],
@@ -72,7 +79,7 @@ zd = Re * math.sin(phi_d)
 Drone = np.array([xd, yd, zd])
 
 
-# ECI to Topocentric (Azimuth/Elevation) conversio
+# ECI to Topocentric (Azimuth/Elevation) conversion
 
 rx = xd - xo
 ry = yd - yo

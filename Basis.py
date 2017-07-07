@@ -92,7 +92,7 @@ def Topocentric(RG, RS, Lat, ST0):
     Ph = Lat*math.pi/180.0
     # Positional vector
     R = [[RS[0] - RG[0]], [RS[1] - RG[1]], [RS[2] - RG[2]]]
-    # Matrix of transformation Geocentric to Tropocentric
+    # Matrix of transformation Geocentric to Topocentric
     GtoT = [[(-math.sin(Th)), (math.cos(Th)), 0],
             [-(math.sin(Ph)*math.cos(Th)), -(math.sin(Ph)*math.sin(Th)), (math.cos(Ph))],
             [(math.cos(Ph)*math.cos(Th)), (math.cos(Ph)*math.sin(Th)), (math.sin(Ph))]]

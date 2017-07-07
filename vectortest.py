@@ -9,20 +9,21 @@ import datetime
 import math
 from Basis import *
 
+
 to = time.time()
 
-Long = []
-Lat = []
-
 # Reading longitude and latitude from file
+Lat = []
+Long = []
+
 with open('radar.txt', 'r') as csvfile:
     coords = csv.reader(csvfile, delimiter=',')
     for row in coords:
-        Long.append(float(row[0]))
-        Lat.append(float(row[1]))
+        Lat.append(float(row[0]))
+        Long.append(float(row[1]))
 
 
-Elev = 1503.0
+Elev = 2000.0
 Re = 6378.0
 
 now = datetime.datetime.utcnow()
@@ -36,21 +37,30 @@ zd = GS0[2]
 
 # MOVING STATION GPS TO CARTESIAN
 
-# Read longitude and latitude from GPS #
+# Read latitude and longitude from GPS #
 ########################################
-Ground_Long = [0]
 Ground_Lat = [-40]
+Ground_Long = [0]
 ########################################
+
+
+# Read Elevation of Ground Station from Google API
+##################################################
+Ground_Elev = 1503.0
+##################################################
+
 
 now = datetime.datetime.utcnow()
 STt0 = SidTime(JulianDay(now.year, now.month, now.day), Ground_Long[0],
                now.hour, now.minute, now.second)
+GS1 = Geocentric(Ground_Lat[0], STt0, Ground_Elev)
 
 # GPS to ECI conversion
 omega = (2*math.pi)/86164.0916
 du = JulianDay(now.year, now.month, now.day) - 2451545.0
 Tu = du/36525.0
-theta0 = 24110.54841 + (8640184.812866 * Tu) + (0.093104 * Tu**2) - (0.0000062 * Tu**3)
+theta0 = ( 24110.54841 + (8640184.812866 * Tu) + (0.093104 * Tu**2)
+           - (0.0000062 * Tu**3) )
 
 tau = datetime.datetime.utcnow()
 deltatau = (tau.hour*60.0*60.0 + tau.minute*60.0 + tau.second)

@@ -111,7 +111,7 @@ z = [zo, zd]
 
 # Define and draw vector on figure
 a = Arrow3D(x, y, z, mutation_scale=20, lw=1, arrowstyle="->",
-            color="k")
+            color="r")
 ax.add_artist(a)
 
 t = 0
@@ -132,7 +132,7 @@ while True:
     z = [zo, zd]
 
     a = Arrow3D(x, y, z, mutation_scale=20, lw=1, arrowstyle="->",
-                color="k")
+                color="r")
     ax.add_artist(a)
 
     plt.pause(0.05)
