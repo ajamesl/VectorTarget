@@ -38,6 +38,7 @@ xd = GS0[0]
 yd = GS0[1]
 zd = GS0[2]
 
+Drone = np.array([xd, yd, zd])
 
 # MOVING STATION GPS TO CARTESIAN
 
@@ -60,6 +61,16 @@ GS1 = ECI_Conversion(Ground_Lat[0], Ground_Long[0], Ground_Elev)
 xo = GS1[0]
 yo = GS1[1]
 zo = GS1[2]
+
+Ground = np.array([xo, yo, zo])
+
+now = datetime.datetime.utcnow()
+STt0 = SidTime(JulianDay(now.year, now.month, now.day), Ground_Long[0], now.hour,
+               now.minute, now.second)
+
+Top = Topocentric(Ground, Drone, Ground_Lat[0], STt0)
+
+AzEl = Angles(Top)
 
 
 # Class defining x, y, z vectors and the vector arrow-head appearance/size
@@ -86,6 +97,8 @@ ax = fig.add_subplot(111, projection='3d')
 
 plt.ion()
 
+
+# Defines a sphere mesh to model the Earth
 u = np.linspace(0, 2 * np.pi, 30)
 v = np.linspace(0, np.pi, 18)
 
@@ -95,6 +108,7 @@ zs = 6378.135 * np.outer(np.ones(np.size(u)), np.cos(v))
 
 c = ax.plot_surface(xs, ys, zs, rstride=1, cstride=1, color='w', shade=0)
 ax.add_artist(c)
+
 
 # Axes ranges & labels
 ax.set_xlim([-7000, 7000])
@@ -114,7 +128,6 @@ a = Arrow3D(x, y, z, mutation_scale=20, lw=1, arrowstyle="->",
             color="r")
 ax.add_artist(a)
 
-t = 0
 i = 1
 
 # Loop updating vector from station to target
@@ -126,6 +139,10 @@ while True:
     xd = GS0[0]
     yd = GS0[1]
     zd = GS0[2]
+    Drone = np.array([xd, yd, zd])
+
+    Top = Topocentric(Ground, Drone, Ground_Lat[0], STt0)
+    AzEl = Angles(Top)
 
     x = [xo, xd]
     y = [yo, yd]
@@ -136,8 +153,13 @@ while True:
     ax.add_artist(a)
 
     plt.pause(0.05)
+
     if i < 39:
         i += 1
+
+    if AzEl[1] < -5.0:
+        print "Target is below the horizon."
+        break
 
 # Keeps figure open
 while True:

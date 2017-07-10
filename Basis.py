@@ -102,7 +102,7 @@ def Topocentric(RG, RS, Lat, ST0):
 
 ################################################################################
 # Function to calculate the elevation and azimtuh angle, the input is the vector
-# reference to tropocentric and the outputs is the distance, elevation and
+# reference to topocentric and the outputs is the distance, elevation and
 # azimuth
 def Angles(Coor):
     # Return distance to ground station
