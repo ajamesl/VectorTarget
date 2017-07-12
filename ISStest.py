@@ -2,12 +2,28 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib.patches import FancyArrowPatch
 from mpl_toolkits.mplot3d import proj3d
+from Basis import *
 import numpy as np
 import time
 import csv
 import datetime
 import math
-from Basis import *
+import geocoder
+import serial
+import sys
+
+
+# Class defining x, y, z vectors and the vector arrow-head appearance/size
+class Arrow3D(FancyArrowPatch):
+    def __init__(self, xs, ys, zs, *args, **kwargs):
+        FancyArrowPatch.__init__(self, (0, 0), (0, 0), *args, **kwargs)
+        self._verts3d = xs, ys, zs
+
+    def draw(self, renderer):
+        xs3d, ys3d, zs3d = self._verts3d
+        xs, ys, zs = proj3d.proj_transform(xs3d, ys3d, zs3d, renderer.M)
+        self.set_positions((xs[0], ys[0]), (xs[1], ys[1]))
+        FancyArrowPatch.draw(self, renderer)
 
 
 def ECI_Conversion(lat, lon, el):
@@ -17,7 +33,10 @@ def ECI_Conversion(lat, lon, el):
     return Geocentric(lat, STt0, el)
 
 
-to = time.time()
+# Reads the number of lines(data points) in the file
+with open('ISSGPS.txt') as f:
+    data_points = sum(1 for line in f)
+
 
 # Reading longitude and latitude from file
 Lat = []
@@ -40,23 +59,47 @@ zd = GS0[2]
 
 Drone = np.array([xd, yd, zd])
 
-# MOVING STATION GPS TO CARTESIAN
 
-# Read latitude and longitude from GPS #
+# Read latitude and longitude from GPS
 ########################################
-# Medellin GPS location
-Ground_Lat = [6.253362]
-Ground_Long = [-75.574419]
-########################################
+ser = serial.Serial('/dev/ttyUSB0', 4800, timeout = 5)
 
+while True:
+    line = ser.readline()
+    splitline = line.split(",")
 
-# Read Elevation (km) of Ground Station from Google API
+    if splitline[0] == '$GPGGA':
+        latitude = splitline[2]
+        latDirec = splitline[3]
+        longitude = splitline[4]
+        longDirec = splitline[5]
+        print line
+        break
+
+if latitude == '' or longitude == '':
+    print "GPS device is not reading the ground station's location."
+    sys.exit()
+
+else:
+    if latDirec == 'N':
+        Ground_Lat = float(latitude)/100.0
+    else:
+        Ground_Lat = -float(latitude)/100.0
+
+    if longDirec == 'E':
+        Ground_Long = float(longitude)/100.0
+    else:
+        Ground_Long = -float(longitude)/100.0
+
+# Get elevation from geocoder
+g = geocoder.elevation([Ground_Lat, Ground_Long])
+Ground_Elev = float(g.meters/1000.0)
+print 'Elevation: ' + str(Ground_Elev)
+
 ##################################################
-Ground_Elev = 1.503
-##################################################
 
-
-GS1 = ECI_Conversion(Ground_Lat[0], Ground_Long[0], Ground_Elev)
+# Conver from ECI to Az-El coordinates
+GS1 = ECI_Conversion(Ground_Lat, Ground_Long, Ground_Elev)
 
 xo = GS1[0]
 yo = GS1[1]
@@ -65,31 +108,15 @@ zo = GS1[2]
 Ground = np.array([xo, yo, zo])
 
 now = datetime.datetime.utcnow()
-STt0 = SidTime(JulianDay(now.year, now.month, now.day), Ground_Long[0], now.hour,
+STt0 = SidTime(JulianDay(now.year, now.month, now.day), Ground_Long, now.hour,
                now.minute, now.second)
 
-Top = Topocentric(Ground, Drone, Ground_Lat[0], STt0)
+Top = Topocentric(Ground, Drone, Ground_Lat, STt0)
 
 AzEl = Angles(Top)
 
 
-# Class defining x, y, z vectors and the vector arrow-head appearance/size
-class Arrow3D(FancyArrowPatch):
-    def __init__(self, xs, ys, zs, *args, **kwargs):
-        FancyArrowPatch.__init__(self, (0, 0), (0, 0), *args, **kwargs)
-        self._verts3d = xs, ys, zs
-
-    def draw(self, renderer):
-        xs3d, ys3d, zs3d = self._verts3d
-        xs, ys, zs = proj3d.proj_transform(xs3d, ys3d, zs3d, renderer.M)
-        self.set_positions((xs[0], ys[0]), (xs[1], ys[1]))
-        FancyArrowPatch.draw(self, renderer)
-
-
-# Function defining time elapsed
-def timer():
-    return time.time() - to
-
+#####################################################
 
 # Defines figure as 3D and interactive
 fig = plt.figure()
@@ -98,7 +125,7 @@ ax = fig.add_subplot(111, projection='3d')
 plt.ion()
 
 
-# Defines a sphere mesh to model the Earth
+# Defines a sphere mesh to model the Earth with radius Re
 u = np.linspace(0, 2 * np.pi, 30)
 v = np.linspace(0, np.pi, 18)
 
@@ -111,9 +138,9 @@ ax.add_artist(c)
 
 
 # Axes ranges & labels
-ax.set_xlim([-7000, 7000])
-ax.set_ylim([-7000, 7000])
-ax.set_zlim([-7000, 7000])
+ax.set_xlim([-6500, 6500])
+ax.set_ylim([-6500, 6500])
+ax.set_zlim([-6500, 6500])
 ax.set_xlabel('x')
 ax.set_ylabel('y')
 ax.set_zlabel('z')
@@ -126,13 +153,16 @@ z = [zo, zd]
 # Define and draw vector on figure
 a = Arrow3D(x, y, z, mutation_scale=20, lw=1, arrowstyle="->",
             color="r")
+
 ax.add_artist(a)
+
+if AzEl[1] < -5.0:
+    print "Target is currently below the horizon."
 
 i = 1
 
 # Loop updating vector from station to target
 while True:
-
     a.remove()
 
     GS0 = ECI_Conversion(Lat[0 + i], Long[0 + i], Elev)
@@ -141,7 +171,7 @@ while True:
     zd = GS0[2]
     Drone = np.array([xd, yd, zd])
 
-    Top = Topocentric(Ground, Drone, Ground_Lat[0], STt0)
+    Top = Topocentric(Ground, Drone, Ground_Lat, STt0)
     AzEl = Angles(Top)
 
     x = [xo, xd]
@@ -154,12 +184,54 @@ while True:
 
     plt.pause(0.05)
 
-    if i < 39:
+    if i < data_points - 1:
         i += 1
 
     if AzEl[1] < -5.0:
         print "Target is below the horizon."
-        break
+        a.remove()
+
+        # Loop updating position of target to check if it is above the
+        # ground station's horizon
+        while True:
+            if AzEl[1] < -5.0:
+                GS0 = ECI_Conversion(Lat[0 + i], Long[0 + i], Elev)
+                xd = GS0[0]
+                yd = GS0[1]
+                zd = GS0[2]
+                Drone = np.array([xd, yd, zd])
+
+                Top = Topocentric(Ground, Drone, Ground_Lat, STt0)
+                AzEl = Angles(Top)
+
+                plt.pause(0.05)
+
+                if i < data_points - 1:
+                    i += 1
+            else:
+                GS0 = ECI_Conversion(Lat[0 + i], Long[0 + i], Elev)
+                xd = GS0[0]
+                yd = GS0[1]
+                zd = GS0[2]
+                Drone = np.array([xd, yd, zd])
+
+                Top = Topocentric(Ground, Drone, Ground_Lat, STt0)
+                AzEl = Angles(Top)
+
+                x = [xo, xd]
+                y = [yo, yd]
+                z = [zo, zd]
+
+                a = Arrow3D(x, y, z, mutation_scale=20, lw=1, arrowstyle="->",
+                            color="r")
+                ax.add_artist(a)
+
+                plt.pause(0.05)
+
+                if i < data_points - 1:
+                    i += 1
+                a.remove()
+
 
 # Keeps figure open
 while True:

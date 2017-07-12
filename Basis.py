@@ -116,7 +116,7 @@ def Angles(Coor):
         # No azimuth angle
         A = 0.0
     else:
-        # To calculate the quadrant of angle, we need the sings of cosA and sinA
+        # To calculate the quadrant of angle, we need the signs of cosA and sinA
         sinA = (RTrop[0]/math.cos(a*math.pi/180.0))
         cosA = (RTrop[1]/math.cos(a*math.pi/180.0))
         # First value, but without quadrant
