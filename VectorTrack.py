@@ -35,8 +35,7 @@ def ECI_Conversion(lat, lon, el):
 
 #####################################################
 
-# Get GPS location of radar, convert to ECI
-# Read data from radar, vector to target and distance
+# Read data from radar, vector to target, distance and elevation
 # Convert data to find ECI of target and elevation
 
 #####################################################
@@ -69,19 +68,25 @@ Drone = np.array([xd, yd, zd])
 ######################################################
 
 # Read latitude and longitude of ground station from GPS
-ser = serial.Serial('/dev/ttyUSB1', 4800, timeout = 5)
+i = 0
+for m in range(0,2):
+        port = '/dev/ttyUSB' + str(i)
+        ser = serial.Serial(port, 4800, timeout = 5)
 
-while True:
-    line = ser.readline()
-    splitline = line.split(",")
+        while True:
+            line = ser.readline()
+            splitline = line.split(",")
 
-    if splitline[0] == '$GPGGA':
-        latitude = splitline[2]
-        latDirec = splitline[3]
-        longitude = splitline[4]
-        longDirec = splitline[5]
-        print line
-        break
+            if splitline[0] == '$GPGGA':
+                latitude = splitline[2]
+                latDirec = splitline[3]
+                longitude = splitline[4]
+                longDirec = splitline[5]
+                break
+        if latitude == '' or longitude == '':
+            i += 1
+        else:
+            break
 
 # Exits programme if GPS device is not reading/connecting to satellites
 if latitude == '' or longitude == '':
@@ -99,11 +104,10 @@ else:
     else:
         Ground_Long = -float(longitude)/100.0
 
-
 # Get elevation from geocoder
 g = geocoder.elevation([Ground_Lat, Ground_Long])
 Ground_Elev = float(g.meters/1000.0)
-print 'Elevation: ' + str(Ground_Elev)
+print 'Ground Elevation: ' + str(Ground_Elev)
 
 ##################################################
 
@@ -123,6 +127,10 @@ STt0 = SidTime(JulianDay(now.year, now.month, now.day), Ground_Long, now.hour,
 Top = Topocentric(Ground, Drone, Ground_Lat, STt0)
 
 AzEl = Angles(Top)
+
+print 'Distance to Target: ' + str(AzEl[0])
+print 'Elevation Angle: ' + str(AzEl[1])
+print 'Azimuth Angle: ' + str(AzEl[2])
 
 #####################################################
 
@@ -179,6 +187,10 @@ while True:
 
     Top = Topocentric(Ground, Drone, Ground_Lat, STt0)
     AzEl = Angles(Top)
+
+    print 'Distance to Target: ' + str(AzEl[0])
+    print 'Elevation Angle: ' + str(AzEl[1])
+    print 'Azimuth Angle: ' + str(AzEl[2])
 
     x = [xo, xd]
     y = [yo, yd]
